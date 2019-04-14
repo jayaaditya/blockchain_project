@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import uuid
 
 from .models import *
 import blockchain.settings as settings
-
+from . import mailer
 from django.shortcuts import render
 from django.http import HttpResponseRedirect,HttpResponse
 from django.contrib.auth.models import User
 from django.core import mail
-
-
-import uuid
-
+from django.contrib.auth.decorators import *
+from django.contrib.auth import authenticate, login, logout
+from . import blockchain
 # Create your views here.
 
 def signup(request):
@@ -28,13 +28,11 @@ def sendMail(request):
     else:
         EmailToken.objects.create(email = email, token = token)
     subject = 'Activation Token'
-    body = "localhost:8000/main/createaccount/?email=%s&token=%s" %(email,token)
-    mail.send_mail(
+    body = "http://localhost:8000/main/createaccount/?email=%s&token=%s" %(email,token)
+    mailer.send_mail_async(
             subject,
             body,
-            settings.EMAIL_HOST_USER,
-            ['jayaa@iitk.ac.in'],
-            fail_silently=False,)
+            email)
     return HttpResponseRedirect('/main/signup/')
 
 def createAccount(request):
@@ -59,9 +57,46 @@ def createAccount(request):
                 return HttpResponse('Invalid Token!')
             else:
                 try:
-                    user = User.objects.create(username = email, email = email, password = password1)
+                    user = User(username = email, email = email, password = password1)
+                    user.set_password(password1)
+                    user.save()
                     return HttpResponse('User Created!')
                 except:
-                    return HttpResponse('User Exists!')
+                    user = User.objects.get(username = email)
+                    user.set_password(password1)
+                    user.save()
+                    return HttpResponse('User Exists! Password Changed.')
         except:
             return HttpResponse('Email Does not exist!')
+
+def signin(request):
+    if request.method == 'POST':
+        username = request.POST['email']
+        password = request.POST['password']
+        user = authenticate(username = username,password = password)
+        if user is not None:
+            login(request,user)
+            return HttpResponseRedirect('/main/index/')
+    return render(request, 'main/signin.html', {})
+
+@login_required
+def index(request):
+    return HttpResponse('Main Page')
+
+@login_required
+def addAddress(request):
+    if request.method == 'POST':
+        address = request.POST['address']
+        user = request.user
+        qSet = UserAddress.objects.filter(user = user)
+        if qSet.exists():
+            return HttpResponse('Address already associated!')
+        UserAddress.objects.create(user = user, address = address)
+        blockchain.add_voter_async(address)
+        return HttpResponseRedirect('/main/index')
+    return render(request,'main/addaddress.html', {})
+
+@login_required
+def signout(request):
+    logout(request)
+    return HttpResponseRedirect('/main/login/')

@@ -27,7 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+LOGIN_URL = '/main/login/'
 # Application definition
 
 INSTALLED_APPS = [
@@ -76,14 +76,6 @@ WSGI_APPLICATION = 'blockchain.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
-
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -134,3 +126,22 @@ EMAIL_HOST_USER = creds['username']
 EMAIL_HOST_PASSWORD = creds['password']
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+
+PRIVATE_KEY = creds['private_key']
+WALLET_ADDRESS = creds['wallet_address']
+CONTRACT_ADDRESS = creds['contract_address']
+INFURA_URL = creds['infura_url']
+CONTRACT_ABI = None
+with open(BASE_DIR+'/main/voting.abi','r') as f:
+    CONTRACT_ABI = f.read()
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'blockchain',
+        'USER': creds['db_user'],
+        'PASSWORD': creds['password'],
+        'HOST': 'localhost',
+        'PORT': '',
+    }
+}
