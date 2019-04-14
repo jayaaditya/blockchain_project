@@ -1,19 +1,5 @@
 [
 	{
-		"constant": true,
-		"inputs": [],
-		"name": "showCandidates",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256[]"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
 		"constant": false,
 		"inputs": [
 			{
@@ -21,7 +7,7 @@
 				"type": "address"
 			}
 		],
-		"name": "removeVoter",
+		"name": "addVoter",
 		"outputs": [],
 		"payable": false,
 		"stateMutability": "nonpayable",
@@ -35,7 +21,7 @@
 				"type": "address"
 			}
 		],
-		"name": "addVoter",
+		"name": "removeVoter",
 		"outputs": [],
 		"payable": false,
 		"stateMutability": "nonpayable",
@@ -55,5 +41,36 @@
 		"payable": false,
 		"stateMutability": "nonpayable",
 		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "voter",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"name": "status",
+				"type": "bool"
+			}
+		],
+		"name": "statusVoter",
+		"type": "event"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "showCandidates",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256[]"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
 	}
 ]

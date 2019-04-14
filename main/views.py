@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import uuid
+import re
 
 from .models import *
 import blockchain.settings as settings
@@ -12,6 +13,9 @@ from django.core import mail
 from django.contrib.auth.decorators import *
 from django.contrib.auth import authenticate, login, logout
 from . import blockchain
+
+regex_string = r'^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(iitk\.ac\.in)$'
+reg_obj = re.compile(regex_string)
 # Create your views here.
 
 def signup(request):
@@ -20,6 +24,8 @@ def signup(request):
 def sendMail(request):
     token = uuid.uuid1().hex
     email = request.GET['email']
+    if not reg_obj.match(email):
+        return HttpResponse('Only iitk email allowed')
     qSet = EmailToken.objects.filter(email = email)
     if qSet.exists():
         obj = qSet[0]

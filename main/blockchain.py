@@ -36,7 +36,12 @@ def addVoter(address):
         count += 1
     if tx_receipt is None:
         return {'status': 'failed', 'error': 'timeout'}
-    return {'status': 'added', 'processed_receipt': tx_receipt}
+    processed_receipt = contract.events.statusVoter().processReceipt(tx_receipt)
+    print(processed_receipt)
+    output = "Address {} has voting status: {}"\
+        .format(processed_receipt[0].args.voter, processed_receipt[0].args.status)
+    print(output)
+    return {'status': 'added', 'processed_receipt': processed_receipt}
 
 def add_voter_async(address):
     t = threading.Thread(target = addVoter, args=(address,))
