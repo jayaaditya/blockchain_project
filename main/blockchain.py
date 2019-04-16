@@ -21,6 +21,32 @@ def addVoter(address):
     print(nonce)
     txn_dict = contract.functions.addVoter(address).buildTransaction({
         'chainId': 3,
+        'gas': 300000,
+        'gasPrice': w3.toWei('50', 'gwei'),
+        'nonce': nonce,
+    })
+    signed_txn = w3.eth.account.signTransaction(txn_dict, private_key=wallet_private_key)
+    result = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+    tx_receipt = w3.eth.getTransactionReceipt(result)
+    count = 0
+    while tx_receipt is None and (count < 30):
+        time.sleep(10)
+        tx_receipt = w3.eth.getTransactionReceipt(result)
+        print(tx_receipt)
+        count += 1
+    if tx_receipt is None:
+        return {'status': 'failed', 'error': 'timeout'}
+    return {'status': 'added', 'processed_receipt': tx_receipt}
+
+def add_voter_async(address):
+    t = threading.Thread(target = addVoter, args=(address,))
+    t.start()
+
+def addCandidate(name):
+    nonce = w3.eth.getTransactionCount(wallet_address) 
+    print(nonce)
+    txn_dict = contract.functions.addCandidate(name).buildTransaction({
+        'chainId': 3,
         'gas': 3000000,
         'gasPrice': w3.toWei('40', 'gwei'),
         'nonce': nonce,
@@ -36,13 +62,34 @@ def addVoter(address):
         count += 1
     if tx_receipt is None:
         return {'status': 'failed', 'error': 'timeout'}
-    processed_receipt = contract.events.statusVoter().processReceipt(tx_receipt)
-    print(processed_receipt)
-    output = "Address {} has voting status: {}"\
-        .format(processed_receipt[0].args.voter, processed_receipt[0].args.status)
-    print(output)
-    return {'status': 'added', 'processed_receipt': processed_receipt}
+    return {'status': 'added', 'processed_receipt': tx_receipt}
 
-def add_voter_async(address):
-    t = threading.Thread(target = addVoter, args=(address,))
+def add_candidate_async(name):
+    t = threading.Thread(target = addCandidate, args=(name,))
+    t.start()
+
+def stopPolling():
+    nonce = w3.eth.getTransactionCount(wallet_address) 
+    print(nonce)
+    txn_dict = contract.functions.stopVoting().buildTransaction({
+        'chainId': 3,
+        'gas': 3000000,
+        'gasPrice': w3.toWei('40', 'gwei'),
+        'nonce': nonce,
+    })
+    signed_txn = w3.eth.account.signTransaction(txn_dict, private_key=wallet_private_key)
+    result = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+    tx_receipt = w3.eth.getTransactionReceipt(result)
+    count = 0
+    while tx_receipt is None and (count < 30):
+        time.sleep(10)
+        tx_receipt = w3.eth.getTransactionReceipt(result)
+        print(tx_receipt)
+        count += 1
+    if tx_receipt is None:
+        return {'status': 'failed', 'error': 'timeout'}
+    return {'status': 'added', 'processed_receipt': tx_receipt}
+
+def stop_polling_async():
+    t = threading.Thread(target = stopPolling)
     t.start()

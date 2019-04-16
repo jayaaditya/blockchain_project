@@ -9,4 +9,6 @@ urlpatterns = [
         url(r'login/$', views.signin),
         url(r'addaddress/$', views.addAddress),
         url(r'logout/$', views.signout),
+        url(r'index2/$', views.index2),
+        url(r'stop/$', views.stopPolling),
         ]

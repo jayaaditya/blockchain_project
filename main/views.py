@@ -14,6 +14,8 @@ from django.contrib.auth.decorators import *
 from django.contrib.auth import authenticate, login, logout
 from . import blockchain
 
+userAddress = {}
+
 regex_string = r'^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(iitk\.ac\.in)$'
 reg_obj = re.compile(regex_string)
 # Create your views here.
@@ -39,7 +41,7 @@ def sendMail(request):
             subject,
             body,
             email)
-    return HttpResponseRedirect('/main/signup/')
+    return HttpResponse('Email sent to %s. Click <a href="/main/sendmail/?email=%s">here</a> to resend.'%(email,email))
 
 def createAccount(request):
     if request.method == 'GET':
@@ -66,7 +68,7 @@ def createAccount(request):
                     user = User(username = email, email = email, password = password1)
                     user.set_password(password1)
                     user.save()
-                    return HttpResponse('User Created!')
+                    return HttpResponseRedirect('/main/login/')
                 except:
                     user = User.objects.get(username = email)
                     user.set_password(password1)
@@ -85,20 +87,38 @@ def signin(request):
             return HttpResponseRedirect('/main/index/')
     return render(request, 'main/signin.html', {})
 
+@user_passes_test(lambda u: u.is_superuser)
+def index2(request):
+    if request.method == 'POST':
+        name = request.POST['name']
+        name.strip()
+        if name != '':
+            blockchain.add_candidate_async(name)
+        return HttpResponseRedirect('/main/index2')
+    return render(request, 'main/index2.html', {})
+
+@user_passes_test(lambda u: u.is_superuser)
+def stopPolling(request):
+    blockchain.stop_polling_async()
+    return HttpResponseRedirect('/main/index2/')
+
 @login_required
 def index(request):
-    return HttpResponse('Main Page')
+    if request.user.is_superuser:
+        return HttpResponseRedirect('/main/index2/')
+    return render(request, 'main/index.html')
 
 @login_required
 def addAddress(request):
     if request.method == 'POST':
         address = request.POST['address']
-        user = request.user
-        qSet = UserAddress.objects.filter(user = user)
-        if qSet.exists():
+        user = request.user.username
+        if user in userAddress:
             return HttpResponse('Address already associated!')
-        UserAddress.objects.create(user = user, address = address)
         blockchain.add_voter_async(address)
+        userAddress[user] = address
+        return HttpResponseRedirect('/main/index')
+    if request.user.username in userAddress:
         return HttpResponseRedirect('/main/index')
     return render(request,'main/addaddress.html', {})
 
